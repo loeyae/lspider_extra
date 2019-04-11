@@ -28,12 +28,12 @@ setup(
             'extend=cdspider_extra.handler:ExtendedHandler',
         ],
         'cdspider.dao.mongo': [
-            'AttachDataDB=cdspider_extra.database.mongo.AttachDataDB',
-            'InteractDB=cdspider_extra.database.mongo.InteractDB',
-            'CommentsDB=cdspider_extra.database.mongo.CommentsDB',
-            'CommentsUniqueDB=cdspider_extra.database.mongo.CommentsUniqueDB',
-            'CommentRuleDB=cdspider_extra.database.mongo.CommentRuleDB',
-            'ExtendRuleDB=cdspider_extra.database.mongo.ExtendRuleDB',
+            'AttachDataDB=cdspider_extra.database.mongo:AttachDataDB',
+            'InteractDB=cdspider_extra.database.mongo:InteractDB',
+            'CommentsDB=cdspider_extra.database.mongo:CommentsDB',
+            'CommentsUniqueDB=cdspider_extra.database.mongo:CommentsUniqueDB',
+            'CommentRuleDB=cdspider_extra.database.mongo:CommentRuleDB',
+            'ExtendRuleDB=cdspider_extra.database.mongo:ExtendRuleDB',
         ],
         'cdspider.extension.item_handler.result_handle': [
             'extra_handle=cdspider_extra.handler.traite:NewAttachmentTask'

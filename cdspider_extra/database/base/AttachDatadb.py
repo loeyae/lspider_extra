@@ -23,6 +23,7 @@ from cdspider.database.base import Base
     }
 }
 
+
 class AttachDataDB(Base):
     """
     attach_data data object
