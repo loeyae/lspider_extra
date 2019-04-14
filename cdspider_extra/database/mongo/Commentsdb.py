@@ -56,14 +56,14 @@ class CommentsDB(Mongo, BaseCommentsDB, SplitTableMixin):
     def _get_collection(self, ctime):
         suffix = time.strftime("%Y%m", time.localtime(ctime))
         name = super(CommentsDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
         return name
 
     def _table_name(self, id):
         suffix, _ = BaseArticlesDB.unbuild_id(id)
         name = super(CommentsDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
         return name
 
@@ -71,20 +71,20 @@ class CommentsDB(Mongo, BaseCommentsDB, SplitTableMixin):
         self._list_collection()
         suffix = time.strftime("%Y%m")
         name = super(CommentsDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
 
     def _create_collection(self, table):
         collection = self._db.get_collection(table)
         indexes = collection.index_information()
-        if not 'uuid' in indexes:
+        if 'uuid' not  in indexes:
             collection.create_index('uuid', unique=True, name='uuid')
-        if not 'rid' in indexes:
+        if 'rid' not  in indexes:
             collection.create_index('rid', name='rid')
-        if not 'unid' in indexes:
+        if 'unid' not  in indexes:
             collection.create_index('unid', unique=True, name='unid')
-        if not 'pubtime' in indexes:
+        if 'pubtime' not  in indexes:
             collection.create_index('pubtime', name='pubtime')
-        if not 'ctime' in indexes:
+        if 'ctime' not  in indexes:
             collection.create_index('ctime', name='ctime')
         self._collections.add(table)

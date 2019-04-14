@@ -24,13 +24,13 @@ class CommentRuleDB(Mongo, BaseCommentRuleDB):
         super(CommentRuleDB, self).__init__(connector, table = table, **kwargs)
         collection = self._db.get_collection(self.table)
         indexes = collection.index_information()
-        if not 'uuid' in indexes:
+        if 'uuid' not  in indexes:
             collection.create_index('uuid', unique=True, name='uuid')
-        if not 'domain' in indexes:
+        if 'domain' not  in indexes:
             collection.create_index('domain', name='domain')
-        if not 'subdomain' in indexes:
+        if 'subdomain' not  in indexes:
             collection.create_index('subdomain', name='subdomain')
-        if not 'ctime' in indexes:
+        if 'ctime' not  in indexes:
             collection.create_index('ctime', name='ctime')
 
     def insert(self, obj = {}):

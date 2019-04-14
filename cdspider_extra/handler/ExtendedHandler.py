@@ -9,10 +9,11 @@
 import copy
 import time
 from cdspider.handler import BaseHandler
-from cdspider.database.base import *
+from cdspider_extra.database.base import *
 from cdspider.libs.constants import *
 from cdspider.libs import utils
 from cdspider.parser import CustomParser
+
 
 class ExtendedHandler(BaseHandler):
     """
@@ -48,9 +49,10 @@ class ExtendedHandler(BaseHandler):
             if typeinfo['domain'] != self.task['extendRule']['domain'] or (self.task['extendRule']['subdomain'] and typeinfo['subdomain'] != self.task['extendRule']['subdomain']):
                 raise CDSpiderNotUrlMatched()
             crawler = self.get_crawler(self.task.get('extendRule', {}).get('request'))
-            crawler.crawl(url=self.task['parent_url'])
-            data = utils.get_attach_data(CustomParser, crawler.page_source, self.task['parent_url'], self.task['extendRule'], self.log_level)
-            if data == False:
+            response = crawler.crawl(url=self.task['parent_url'])
+            data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'], self.task[
+                'extendRule'], self.log_level)
+            if data is False:
                 return None
             url, params = utils.build_attach_url(data, self.task['extendRule'], self.task['parent_url'])
             del crawler
@@ -71,7 +73,7 @@ class ExtendedHandler(BaseHandler):
             self.task['parent_url'] = article['url']
             self.task['acid'] = article['acid']
         self.process = self.match_rule()  or {"unique": {"data": None}}
-        if not 'data' in self.process['unique'] or not self.process['unique']['data']:
+        if 'data' not  in self.process['unique'] or not self.process['unique']['data']:
             self.process['unique']['data'] = ','. join(self.process['parse']['item'].keys())
         save['paging'] = True
 
@@ -99,7 +101,7 @@ class ExtendedHandler(BaseHandler):
         :input self.response 爬虫结果 {"last_source": 最后一次抓取到的源码, "final_url": 最后一次请求的url}
         :output self.response {"parsed": 解析结果}
         """
-        parser = CustomParser(source=self.response['last_source'], ruleset=copy.deepcopy(rule), log_level=self.log_level, url=self.response['final_url'])
+        parser = CustomParser(source=self.response['content'], ruleset=copy.deepcopy(rule), log_level=self.log_level, url=self.response['final_url'])
         self.response['parsed'] = parser.parse()
 
     def run_result(self, save):

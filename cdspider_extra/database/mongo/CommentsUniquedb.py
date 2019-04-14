@@ -46,5 +46,5 @@ class CommentsUniqueDB(Mongo, BaseCommentsUniqueDB, SplitTableMixin):
                 tablename = self._collection_name(str(i))
                 collection = self._db.get_collection(tablename)
                 indexes = collection.index_information()
-                if not 'unid' in indexes:
+                if 'unid' not  in indexes:
                     collection.create_index('unid', unique=True, name='unid')

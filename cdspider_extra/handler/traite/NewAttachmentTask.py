@@ -14,33 +14,36 @@ from cdspider.parser import CustomParser
 from cdspider.libs.pluginbase import ExecutBase
 from cdspider_extra.libs.constants import *
 
+
 class NewAttachmentTask(ExecutBase):
     """
     生成附加任务
     """
-    def handle(self, crawlinfo, save, rid, domain, subdomain=None, data = None, url = None):
+    def handle(self, save, domain, subdomain=None, data = None, url = None):
         """
         根据详情页生成附加任务
         :param save 传递的上下文信息
         :param domain 域名
         :param subdomain 子域名
         """
-        self.handler.debug("%s new attach task starting" % (self.__class__.__name__))
+        self.handler.debug("%s new attach task starting" % self.__class__.__name__)
         if self.handler.page != 1:
             '''
             只在第一页时执行
             '''
             return
-        self.handler.debug("%s new comment task starting" % (self.__class__.__name__))
+        crawlinfo = self.handler.task.get('crawlinfo')
+        rid = self.handler.task.get('rid')
+        self.handler.debug("%s new comment task starting" % self.__class__.__name__)
         self.handler.result2comment(crawlinfo, save, rid, domain, subdomain, data, url)
-        self.handler.debug("%s new comment task end" % (self.__class__.__name__))
-        self.handler.debug("%s new interact task starting" % (self.__class__.__name__))
+        self.handler.debug("%s new comment task end" % self.__class__.__name__)
+        self.handler.debug("%s new interact task starting" % self.__class__.__name__)
         self.handler.result2interact(crawlinfo, save, rid, domain, subdomain, data, url)
-        self.handler.debug("%s new interact task end" % (self.__class__.__name__))
-        self.handler.debug("%s new extend task starting" % (self.__class__.__name__))
+        self.handler.debug("%s new interact task end" % self.__class__.__name__)
+        self.handler.debug("%s new extend task starting" % self.__class__.__name__)
         self.handler.result2extend(crawlinfo, save, rid, domain, subdomain, data, url)
-        self.handler.debug("%s new extend task end" % (self.__class__.__name__))
-        self.handler.debug("%s new attach task end" % (self.__class__.__name__))
+        self.handler.debug("%s new extend task end" % self.__class__.__name__)
+        self.handler.debug("%s new attach task end" % self.__class__.__name__)
 
     def result2comment(self, crawlinfo, save, rid, domain, subdomain = None, data = None, url = None):
         """
@@ -54,7 +57,7 @@ class NewAttachmentTask(ExecutBase):
                 if final_url is None:
                     final_url = self.handler.response['final_url']
                 if data is None:
-                    data = utils.get_attach_data(CustomParser, self.handler.response['last_source'], final_url, rule, self.handler.log_level)
+                    data = utils.get_attach_data(CustomParser, self.handler.response['content'], final_url, rule, self.handler.log_level)
                 if data == False:
                     return None
                 url, params = utils.build_attach_url(data, rule, self.handler.response['final_url'])
@@ -97,7 +100,7 @@ class NewAttachmentTask(ExecutBase):
                 if final_url is None:
                     final_url = self.handler.response['final_url']
                 if data is None:
-                    data = utils.get_attach_data(CustomParser, self.handler.response['last_source'], final_url, rule, self.handler.log_level)
+                    data = utils.get_attach_data(CustomParser, self.handler.response['content'], final_url, rule, self.handler.log_level)
                 if data == False:
                     return None
                 url, params = utils.build_attach_url(data, rule, self.handler.response['final_url'])
@@ -121,7 +124,7 @@ class NewAttachmentTask(ExecutBase):
         for rule in ruleset:
             self.handler.debug("%s interact task rule: %s" % (self.__class__.__name__, str(rule)))
             buid_task(crawlinfo, rule, rid, data, url)
-        #通过域名获取互动数任务
+        # 通过域名获取互动数任务
         ruleset = self.handler.db['InteractDB'].get_list_by_domain(domain, where={"status": self.handler.db['InteractDB'].STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s interact task rule: %s" % (self.handler.__class__.__name__, str(rule)))
@@ -139,7 +142,7 @@ class NewAttachmentTask(ExecutBase):
                 if final_url is None:
                     final_url = self.handler.response['final_url']
                 if data is None:
-                    data = utils.get_attach_data(CustomParser, self.handler.response['last_source'], final_url, rule, self.handler.log_level)
+                    data = utils.get_attach_data(CustomParser, self.handler.response['content'], final_url, rule, self.handler.log_level)
                 if data == False:
                     return None
                 url, params = utils.build_attach_url(data, rule, self.handler.response['final_url'])
@@ -249,7 +252,7 @@ class NewAttachmentTask(ExecutBase):
         :param url taks url
         :param rule 互动数任务规则
         """
-        if not 'loop' in rule or not rule['loop']:
+        if 'loop' not  in rule or not rule['loop']:
             task = {
                 'mediaType': self.handler.process.get('mediaType', self.handler.task.get('mediaType', MEDIA_TYPE_OTHER)),
                 'mode': HANDLER_MODE_EXTEND,                            # handler mode

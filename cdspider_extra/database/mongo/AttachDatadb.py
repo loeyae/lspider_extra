@@ -53,14 +53,14 @@ class AttachDataDB(Mongo, BaseAttachDataDB, SplitTableMixin):
     def _get_collection(self, ctime):
         suffix = time.strftime("%Y%m", time.localtime(ctime))
         name = super(AttachDataDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
         return name
 
     def _table_name(self, id):
         suffix, _ = BaseArticlesDB.unbuild_id(id)
         name = super(AttachDataDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
         return name
 
@@ -68,20 +68,20 @@ class AttachDataDB(Mongo, BaseAttachDataDB, SplitTableMixin):
         self._list_collection()
         suffix = time.strftime("%Y%m")
         name = super(AttachDataDB, self)._collection_name(suffix)
-        if not name in self._collections:
+        if name not  in self._collections:
             self._create_collection(name)
 
     def _create_collection(self, table):
         collection = self._db.get_collection(table)
         indexes = collection.index_information()
-        if not 'rid' in indexes:
+        if 'rid' not  in indexes:
             collection.create_index('rid', unique=True, name='rid')
-        if not 'acid' in indexes:
+        if 'acid' not  in indexes:
             collection.create_index('acid', unique=True, name='acid')
-        if not 'domain' in indexes:
+        if 'domain' not  in indexes:
             collection.create_index('domain', name='domain')
-        if not 'subdomain' in indexes:
+        if 'subdomain' not  in indexes:
             collection.create_index('subdomain', name='subdomain')
-        if not 'ctime' in indexes:
+        if 'ctime' not  in indexes:
             collection.create_index('ctime', name='ctime')
         self._collections.add(table)

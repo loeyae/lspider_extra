@@ -10,4 +10,4 @@
 
 HANDLER_MODE_COMMENT = 'comment'                      # 评论handler
 HANDLER_MODE_INTERACT = 'interact'                    # 互动数（阅读数、点赞数...）handler
-HANDLER_MODE_EXTENDED = 'extend'                      # 扩展数据handler
+HANDLER_MODE_EXTEND = 'extend'                        # 扩展数据handler

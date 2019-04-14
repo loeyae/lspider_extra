@@ -9,10 +9,11 @@
 import copy
 import time
 from cdspider.handler import BaseHandler
-from cdspider.database.base import *
+from cdspider_extra.database.base import *
 from cdspider.libs.constants import *
 from cdspider.libs import utils
 from cdspider.parser import CustomParser
+
 
 class InteractHandler(BaseHandler):
     """
@@ -42,9 +43,10 @@ class InteractHandler(BaseHandler):
             if typeinfo['domain'] != self.task['interactionNumRule']['domain'] or (self.task['interactionNumRule']['subdomain'] and typeinfo['subdomain'] != self.task['interactionNumRule']['subdomain']):
                 raise CDSpiderNotUrlMatched()
             crawler = self.get_crawler(self.task.get('interactionNumRule', {}).get('request'))
-            crawler.crawl(url=self.task['parent_url'])
-            data = utils.get_attach_data(CustomParser, crawler.page_source, self.task['parent_url'], self.task['interactionNumRule'], self.log_level)
-            if data == False:
+            response = crawler.crawl(url=self.task['parent_url'])
+            data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'], self.task[
+                'interactionNumRule'], self.log_level)
+            if data is False:
                 return None
             url, params = utils.build_attach_url(data, self.task['interactionNumRule'], self.task['parent_url'])
             del crawler
@@ -99,7 +101,7 @@ class InteractHandler(BaseHandler):
             _r = build_rule(item)
             if _r:
                 r.update(_r)
-        parser = CustomParser(source=self.response['last_source'], ruleset=r, log_level=self.log_level, url=self.response['final_url'])
+        parser = CustomParser(source=self.response['content'], ruleset=r, log_level=self.log_level, url=self.response['final_url'])
         self.response['parsed'] = parser.parse()
 
     def run_result(self, save):
@@ -115,7 +117,7 @@ class InteractHandler(BaseHandler):
             result = copy.deepcopy(self.response['parsed'])
             attach_data = self.db['AttachDataDB'].get_detail(rid)
             if attach_data:
-                if not "crawlinfo" in attach_data or not attach_data['crawlinfo']:
+                if "crawlinfo" not  in attach_data or not attach_data['crawlinfo']:
                     #爬虫信息记录
                     result['crawlinfo'] = {
                         'pid': self.task['pid'],                        # project id
@@ -127,7 +129,7 @@ class InteractHandler(BaseHandler):
                         'ruleId': self.task['rid'],                     # interactionNumRule id
                         'final_url': self.response['final_url'],        # 请求url
                     }
-                elif not "ruleId" in attach_data['crawlinfo'] or not attach_data['crawlinfo']['ruleId']:
+                elif "ruleId" not  in attach_data['crawlinfo'] or not attach_data['crawlinfo']['ruleId']:
                     crawlinfo = attach_data['crawlinfo']
                     crawlinfo['ruleId'] = self.task['rid']
                     result['crawlinfo'] = crawlinfo
