@@ -183,7 +183,7 @@ class InteractHandler(BaseHandler):
         if not s:
             s = {}
         s.update(save)
-        self.db['SpiderTaskDB'].update(self.task['uuid'], self.task['mode'], {"crawltime": self.crawl_id, "crawlinfo": dict(crawlinfo_sorted), "save": s})
+        self.db['SpiderTaskDB'].update(self.task['uuid'], self.mode, {"crawltime": self.crawl_id, "crawlinfo": dict(crawlinfo_sorted), "save": s})
 
     def build_sync_task(self, rid):
         """

@@ -29,7 +29,7 @@ class CommentHandler(BaseHandler):
         """
         try:
             if "uuid" in self.task and self.task['uuid']:
-                task = self.db['SpiderTaskDB'].get_detail(self.task['uuid'], self.task['mode'])
+                task = self.db['SpiderTaskDB'].get_detail(self.task['uuid'], self.mode)
                 if not task:
                     raise CDSpiderDBDataNotFound("SpiderTask: %s not exists" % self.task['uuid'])
                 self.task.update(task)
@@ -190,7 +190,7 @@ class CommentHandler(BaseHandler):
         if not s:
             s = {}
         s.update(save)
-        self.db['SpiderTaskDB'].update(self.task['uuid'], self.task['mode'], {"crawltime": self.crawl_id, "crawlinfo": dict(crawlinfo_sorted), "save": s})
+        self.db['SpiderTaskDB'].update(self.task['uuid'], self.mode, {"crawltime": self.crawl_id, "crawlinfo": dict(crawlinfo_sorted), "save": s})
 
     def build_sync_task(self, uuid, rid):
         """
