@@ -8,7 +8,7 @@
 """
 import copy
 import time
-from cdspider.handler import BaseHandler
+from cdspider.handler import GeneralHandler
 from cdspider.libs.constants import *
 from cdspider.libs import utils
 from cdspider.parser import CustomParser
@@ -16,77 +16,59 @@ from cdspider.parser.lib import TimeParser
 from cdspider_extra.database.base import *
 
 
-class CommentHandler(BaseHandler):
+class CommentHandler(GeneralHandler):
     """
     comment handler
     :property task 爬虫任务信息 {"mode": "comment", "uuid": SpiderTask.comment uuid}
                    当测试该handler，数据应为 {"mode": "comment", "url": url, "commentRule": 评论规则，参考评论规则}
     """
 
-    def get_scripts(self):
-        """
-        获取自定义脚本
-        """
-        try:
-            if "uuid" in self.task and self.task['uuid']:
-                task = self.db['SpiderTaskDB'].get_detail(self.task['uuid'], self.mode)
-                if not task:
-                    raise CDSpiderDBDataNotFound("SpiderTask: %s not exists" % self.task['uuid'])
-                self.task.update(task)
-            rule = self.match_rule() or {}
-            return rule.get("scripts", None)
-        except:
-            return None
-
     def init_process(self, save):
         """
         初始化爬虫流程
         :output self.process {"request": 请求设置, "parse": 解析规则, "paging": 分页规则, "unique": 唯一索引规则}
         """
-        if "commentRule" in self.task:
+        self.process = self.match_rule(save) or {"unique": {"data": None}, "parse": {"item":{"content":None}}}
+        if 'data' not  in self.process['unique'] or not self.process['unique']['data']:
+            self.process['unique']['data'] = ','. join(self.process['parse']['item'].keys())
+
+    def match_rule(self, save):
+        """
+        获取匹配的规则
+        """
+        if "rule" in self.task and self.task['rule']:
+            parse_rule = self.db['CommentRuleDB'].get_detail(self.task['rule'])
+            if not parse_rule:
+                raise CDSpiderDBDataNotFound("rule: %s not exists" % self.task['rule'])
             self.task['parent_url'] = self.task['url']
             self.task['acid'] = "testing_mode"
             typeinfo = utils.typeinfo(self.task['parent_url'])
-            if typeinfo['domain'] != self.task['commentRule']['domain'] or (self.task['commentRule']['subdomain'] and typeinfo['subdomain'] != self.task['commentRule']['subdomain']):
+            if typeinfo['domain'] != parse_rule['domain'] or \
+                    (parse_rule['subdomain'] and typeinfo['subdomain'] != parse_rule['subdomain']):
                 raise CDSpiderNotUrlMatched()
-            crawler = self.get_crawler(self.task.get('commentRule', {}).get('request'))
+            crawler = self.get_crawler(parse_rule.get('request'))
             response = crawler.crawl(url=self.task['parent_url'])
-            data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'], self.task[
-                'commentRule'], self.log_level)
+            data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'],
+                                         parse_rule, self.log_level)
             if data is False:
                 return None
-            url, params = utils.build_attach_url(data, self.task['commentRule'], self.task['parent_url'])
+            url, params = utils.build_attach_url(data, parse_rule, self.task['parent_url'])
             del crawler
             if not url:
                 raise CDSpiderNotUrlMatched()
             self.task['url'] = url
             save['base_url'] = url
             save["hard_code"] = params
-            self.task['commentRule']['request']['hard_code'] = params
+            parse_rule['request']['hard_code'] = params
         else:
-            mediaType = self.task.get('mediaType', MEDIA_TYPE_OTHER)
-            if mediaType == MEDIA_TYPE_WEIBO:
-                article = self.db['WeiboInfoDB'].get_detail(self.task.get('parentid', '0'), select=['url', 'acid'])
-            else:
-                article = self.db['ArticlesDB'].get_detail(self.task.get('parentid', '0'), select=['url', 'acid'])
+            '''
+            如果task中包含列表规则，则读取相应的规则，否则在数据库中查询
+            '''
+            article = self.db['ArticlesDB'].get_detail(self.task.get('parentid', '0'), select=['url', 'acid'])
             if not article:
                 raise CDSpiderHandlerError("aritcle: %s not exists" % self.task['parentid'])
             self.task['parent_url'] = article['url']
             self.task['acid'] = article['acid']
-        self.process = self.match_rule()  or {"unique": {"data": None}}
-        if 'data' not  in self.process['unique'] or not self.process['unique']['data']:
-            self.process['unique']['data'] = ','. join(self.process['parse']['item'].keys())
-        save['paging'] = True
-
-    def match_rule(self):
-        """
-        获取匹配的规则
-        """
-        parse_rule = self.task.get("commentRule", {})
-        if not parse_rule:
-            '''
-            如果task中包含列表规则，则读取相应的规则，否则在数据库中查询
-            '''
             ruleId = self.task.get('rid', 0)
             parse_rule = self.db['CommentRuleDB'].get_detail(ruleId)
             if not parse_rule:
@@ -138,7 +120,6 @@ class CommentHandler(BaseHandler):
                         result_id = self.db['CommentsDB'].insert(result)
                         if not result_id:
                             raise CDSpiderDBError("Result insert failed")
-                        self.build_sync_task(result_id, self.task['parentid'])
                     self.crawl_info['crawl_count']['new_count'] += 1
                 else:
                     self.crawl_info['crawl_count']['repeat_count'] += 1
@@ -174,27 +155,3 @@ class CommentHandler(BaseHandler):
         result['unid'] = kwargs.pop('unid')
         result['ctime'] = kwargs.pop('ctime')
         return result
-
-    def finish(self, save):
-        """
-        记录抓取日志
-        """
-        super(CommentHandler, self).finish(save)
-        crawlinfo = self.task.get('crawlinfo', {}) or {}
-        self.crawl_info['crawl_end'] = int(time.time())
-        crawlinfo[str(self.crawl_id)] = self.crawl_info
-        crawlinfo_sorted = [(k, crawlinfo[k]) for k in sorted(crawlinfo.keys())]
-        if len(crawlinfo_sorted) > self.CRAWL_INFO_LIMIT_COUNT:
-            del crawlinfo_sorted[0]
-        s = self.task.get("save")
-        if not s:
-            s = {}
-        s.update(save)
-        self.db['SpiderTaskDB'].update(self.task['uuid'], self.mode, {"crawltime": self.crawl_id, "crawlinfo": dict(crawlinfo_sorted), "save": s})
-
-    def build_sync_task(self, uuid, rid):
-        """
-        生成同步任务并入队
-        """
-        message = {'id': uuid, 'rid': rid}
-        self.queue['comment2kafka'].put_nowait(message)
