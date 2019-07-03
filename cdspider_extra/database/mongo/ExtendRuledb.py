@@ -16,9 +16,9 @@ class ExtendRuleDB(Mongo, BaseExtendRuleDB):
     """
     ExtendRuleDB
     """
-    __tablename__ = 'extendRule'
+    __tablename__ = 'extend_rule'
 
-    incr_key = 'extendRule'
+    incr_key = 'extend_rule'
 
     def __init__(self, connector, table=None, **kwargs):
         super(ExtendRuleDB, self).__init__(connector, table = table, **kwargs)
