@@ -26,7 +26,7 @@ class InteractHandler(GeneralHandler):
         获取匹配的规则
         """
         if "rule" in self.task:
-            parse_rule = self.db['InteractDB'].get_detail(self.task['rule'])
+            parse_rule = self.db['ExtendRuleDB'].get_detail(self.task['rule'])
             if not parse_rule:
                 raise CDSpiderDBDataNotFound("rule: %s not exists" % self.task['rule'])
             self.task['parent_url'] = self.task['url']
@@ -55,10 +55,10 @@ class InteractHandler(GeneralHandler):
                 raise CDSpiderHandlerError("aritcle: %s not exists" % self.task['parentid'])
             self.task['acid'] = article['acid']
             ruleId = self.task.get('rid', 0)
-            parse_rule = self.db['InteractDB'].get_detail(ruleId)
+            parse_rule = self.db['ExtendRuleDB'].get_detail(ruleId)
             if not parse_rule:
                 raise CDSpiderDBDataNotFound("interactionNumRule: %s not exists" % ruleId)
-            if parse_rule['status'] != InteractDB.STATUS_ACTIVE:
+            if parse_rule['status'] != ExtendRuleDB.STATUS_ACTIVE:
                 raise CDSpiderHandlerError("interaction num rule not active")
         return parse_rule
 
@@ -79,7 +79,8 @@ class InteractHandler(GeneralHandler):
             _r = build_rule(item)
             if _r:
                 r.update(_r)
-        parser = CustomParser(source=self.response['content'], ruleset=r, log_level=self.log_level, url=self.response['final_url'])
+        parser = CustomParser(source=self.response['content'], ruleset=r, log_level=self.log_level,
+                              url=self.response['final_url'])
         self.response['parsed'] = parser.parse()
 
     def run_result(self, save):
@@ -93,7 +94,7 @@ class InteractHandler(GeneralHandler):
         if self.response['parsed']:
             rid = self.task.get('parentid', None)
             result = copy.deepcopy(self.response['parsed'])
-            attach_data = self.db['AttachDataDB'].get_detail(rid)
+            attach_data = self.db['InteractDB'].get_detail(rid)
             if attach_data:
                 if "crawlinfo" not  in attach_data or not attach_data['crawlinfo']:
                     #爬虫信息记录
@@ -118,7 +119,7 @@ class InteractHandler(GeneralHandler):
                     '''
                     testing_mode打开时，数据不入库
                     '''
-                    self.db['AttachDataDB'].update(rid, result)
+                    self.db['InteractDB'].update(rid, result)
                     self.build_sync_task(rid)
                 self.crawl_info['crawl_count']['repeat_count'] += 1
             else:
@@ -141,7 +142,7 @@ class InteractHandler(GeneralHandler):
                     '''
                     testing_mode打开时，数据不入库
                     '''
-                    self.db['AttachDataDB'].insert(result)
+                    self.db['InteractDB'].insert(result)
                     self.extension("")
 
                 self.crawl_info['crawl_count']['new_count'] += 1

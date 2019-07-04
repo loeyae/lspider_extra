@@ -8,11 +8,12 @@
 """
 import time
 import traceback
-from cdspider.libs import utils
 from cdspider.libs.constants import *
 from cdspider.parser import CustomParser
 from cdspider.libs.pluginbase import ExecutBase
 from cdspider_extra.libs.constants import *
+from cdspider_extra.database.base import *
+from cdspider_extra.libs import utils
 
 
 class NewAttachmentTask(ExecutBase):
@@ -76,13 +77,15 @@ class NewAttachmentTask(ExecutBase):
                 self.handler.error(traceback.format_exc())
                 return False
         #通过子域名获取评论任务
-        ruleset = self.handler.db['CommentRuleDB'].get_list_by_subdomain(subdomain, where={"status": self.handler.db['CommentRuleDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_subdomain(subdomain, HANDLER_MODE_COMMENT,
+                                                                        where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s comment task rule: %s" % (self.handler.__class__.__name__, str(rule)))
             if build_task(crawlinfo, rule, rid, data, url):
                 return
         #通过域名获取评论任务
-        ruleset = self.handler.db['CommentRuleDB'].get_list_by_domain(domain, where={"status": self.handler.db['CommentRuleDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_domain(domain, HANDLER_MODE_COMMENT,
+                                                                      where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s comment task rule: %s" % (self.handler.__class__.__name__, str(rule)))
             if build_task(crawlinfo, rule, rid, data, url):
@@ -120,12 +123,14 @@ class NewAttachmentTask(ExecutBase):
             except:
                 self.error(traceback.format_exc())
         #通过子域名获取互动数任务
-        ruleset = self.handler.db['InteractDB'].get_list_by_subdomain(subdomain, where={"status": self.handler.db['InteractDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_subdomain(subdomain, HANDLER_MODE_INTERACT,
+                                                                      where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s interact task rule: %s" % (self.__class__.__name__, str(rule)))
             buid_task(crawlinfo, rule, rid, data, url)
         # 通过域名获取互动数任务
-        ruleset = self.handler.db['InteractDB'].get_list_by_domain(domain, where={"status": self.handler.db['InteractDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_domain(domain, HANDLER_MODE_INTERACT,
+                                                                   where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s interact task rule: %s" % (self.handler.__class__.__name__, str(rule)))
             buid_task(crawlinfo, rule, rid, data, url)
@@ -162,12 +167,14 @@ class NewAttachmentTask(ExecutBase):
             except:
                 self.handler.error(traceback.format_exc())
         #通过子域名获取扩展任务
-        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_subdomain(subdomain, where={"status": self.handler.db['ExtendRuleDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_subdomain(subdomain, HANDLER_MODE_EXTEND,
+                                                                        where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s extend task rule: %s" % (self.handler.__class__.__name__, str(rule)))
             buid_task(crawlinfo, rule, rid, data, url)
         #通过域名获取扩展任务
-        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_domain(domain, where={"status": self.handler.db['ExtendRuleDB'].STATUS_ACTIVE})
+        ruleset = self.handler.db['ExtendRuleDB'].get_list_by_domain(domain, HANDLER_MODE_EXTEND,
+                                                                     where={"status": ExtendRuleDB.STATUS_ACTIVE})
         for rule in ruleset:
             self.handler.debug("%s extend task rule: %s" % (self.handler.__class__.__name__, str(rule)))
             buid_task(crawlinfo, rule, rid, data, url)

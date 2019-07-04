@@ -5,97 +5,83 @@
 
 """
 :author:  Zhang Yi <loeyae@gmail.com>
-:date:    2018-6-21 18:53:06
-:version: SVN: $Id: Interactdb.py 2114 2018-07-04 03:56:01Z zhangyi $
+:date:    2018-8-4 22:17:41
 """
 import time
-from cdspider.database.mongo.Mongo import Mongo
+from cdspider.database.base import ArticlesDB as BaseArticlesDB
+from cdspider.database.mongo.Mongo import Mongo, SplitTableMixin
 from cdspider_extra.database.base import InteractDB as BaseInteractDB
 
-class InteractDB(Mongo, BaseInteractDB):
+class InteractDB(Mongo, BaseInteractDB, SplitTableMixin):
     """
-    InteractDB
+    attach_data data object
     """
-    __tablename__ = 'interactionNumRule'
-
-    incr_key = 'interactionNumRule'
+    __tablename__ = 'interact'
 
     def __init__(self, connector, table=None, **kwargs):
         super(InteractDB, self).__init__(connector, table = table, **kwargs)
-        collection = self._db.get_collection(self.table)
+        self._check_collection()
+
+    def insert(self, obj = {}):
+        obj.setdefault("ctime", int(time.time()))
+        table = self._table_name(obj['rid'])
+        super(InteractDB, self).insert(setting=obj, table=table)
+        return obj['rid']
+
+    def update(self, id, obj = {}):
+        table = self._table_name(id)
+        obj['utime'] = int(time.time())
+        return super(InteractDB, self).update(setting=obj, where={"rid": id}, table=table)
+
+    def get_detail(self, id, select = None):
+        table = self._table_name(id)
+        return self.get(where={"rid": id}, table=table, select=select)
+
+    def get_detail_by_unid(self, unid, ctime):
+        table = self._get_collection(ctime)
+        return self.get(where = {"acid", unid}, table=table)
+
+    def get_list(self, ctime, where = {}, select = None, **kwargs):
+        table = self._get_collection(ctime)
+        kwargs.setdefault('sort', [('ctime', 1)])
+        return self.find(table=table, where=where, select=select, **kwargs)
+
+    def get_count(self, ctime, where = {}, select = None, **kwargs):
+        table = self._get_collection(ctime)
+        return self.count(table=table, where=where, select=select, **kwargs)
+
+    def _get_collection(self, ctime):
+        suffix = time.strftime("%Y%m", time.localtime(ctime))
+        name = super(InteractDB, self)._collection_name(suffix)
+        if name not  in self._collections:
+            self._create_collection(name)
+        return name
+
+    def _table_name(self, id):
+        suffix, _ = BaseArticlesDB.unbuild_id(id)
+        name = super(InteractDB, self)._collection_name(suffix)
+        if name not  in self._collections:
+            self._create_collection(name)
+        return name
+
+    def _check_collection(self):
+        self._list_collection()
+        suffix = time.strftime("%Y%m")
+        name = super(InteractDB, self)._collection_name(suffix)
+        if name not  in self._collections:
+            self._create_collection(name)
+
+    def _create_collection(self, table):
+        collection = self._db.get_collection(table)
         indexes = collection.index_information()
-        if 'uuid' not  in indexes:
-            collection.create_index('uuid', unique=True, name='uuid')
+        if 'rid' not  in indexes:
+            collection.create_index('rid', unique=True, name='rid')
+        if 'acid' not  in indexes:
+            collection.create_index('acid', unique=True, name='acid')
         if 'domain' not  in indexes:
             collection.create_index('domain', name='domain')
         if 'subdomain' not  in indexes:
             collection.create_index('subdomain', name='subdomain')
         if 'ctime' not  in indexes:
             collection.create_index('ctime', name='ctime')
-
-    def insert(self, obj = {}):
-        obj['uuid'] = self._get_increment(self.incr_key)
-        obj.setdefault('status', self.STATUS_INIT)
-        obj.setdefault('ctime', int(time.time()))
-        obj.setdefault('utime', 0)
-        _id = super(InteractDB, self).insert(setting=obj)
-        return obj['uuid']
-
-    def update(self, id, obj = {}):
-        obj['utime'] = int(time.time())
-        return super(InteractDB, self).update(setting=obj, where={'uuid': int(id)}, multi=False)
-
-    def update_many(self, obj = {},where=None):
-        if where=={} or where==None:
-            return
-        obj['utime'] = int(time.time())
-        return super(InteractDB, self).update(setting=obj, where=where, multi=True)
-
-    def delete(self, id, where = {}):
-        obj = {"status": self.STATUS_DELETED}
-        obj['utime'] = int(time.time())
-        if not where:
-            where = {'uuid': int(id)}
-        else:
-            where.update({'uuid': int(id)})
-        return super(InteractDB, self).update(setting=obj, where=where, multi=False)
-
-    def active(self, id, where = {}):
-        obj = {"status": self.STATUS_ACTIVE}
-        obj['utime'] = int(time.time())
-        if not where:
-            where = {'uuid': int(id)}
-        else:
-            where.update({'uuid': int(id)})
-        return super(InteractDB, self).update(setting=obj, where=where, multi=False)
-
-    def disable(self, id, where = {}):
-        obj = {"status": self.STATUS_INIT}
-        obj['utime'] = int(time.time())
-        if not where:
-            where = {'uuid': int(id)}
-        else:
-            where.update({'uuid': int(id)})
-        return super(InteractDB, self).update(setting=obj, where=where, multi=False)
-
-    def get_detail(self, id):
-        return self.get(where={'uuid': int(id)})
-
-    def get_list(self, where = {}, select=None, **kwargs):
-        kwargs.setdefault('sort', [('uuid', 1)])
-        return self.find(where=where, select=select, **kwargs)
-
-    def get_list_by_domain(self, domain, where = {}, select=None, **kwargs):
-        kwargs.setdefault('sort', [('uuid', 1)])
-        if not where:
-            where = {}
-        where['domain'] = domain
-        where['subdomain'] = {"$in": ["", None]}
-        return self.find(where=where, select=select, **kwargs)
-
-    def get_list_by_subdomain(self, subdomain, where = {}, select=None, **kwargs):
-        kwargs.setdefault('sort', [('uuid', 1)])
-        if not where:
-            where = {}
-        where['subdomain'] = subdomain
-        return self.find(where=where, select=select, **kwargs)
+        self._collections.add(table)

@@ -5,60 +5,45 @@
 
 """
 :author:  Zhang Yi <loeyae@gmail.com>
-:date:    2018-6-21 18:37:29
+:date:    2018-8-4 19:07:46
 """
 
 from cdspider.database.base import Base
 
 {
-    "interactionNumRule": {
-        'uuid': int,           # 附加任务I
-        'domain': str,        # 一级域名
-        'subdomain': str,     # 二级域名
-        'status': int,        # 状态
-        'rate': int,          # 更新频率
-        'expire': int,        # 过期时间
-        'preparse': str,      # 预解析设置
-        'process': str,       # 解析设置
-        'unique': str,        # 唯一索引设置
-        'ctime': int,         # 创建时间
-        'utime': int,         # 最后一次更新时间
-        'creator': int,       # 创建人ID
-        'updator': int,       # 最后一次修改人ID
+    "interact": {
+        'rid': str,              # result id
+        'acid': str,             # 文章ID
+        'views': int,            # 阅读数
+        'like_num': int,         # 点赞数
+        'reposts_num': int,      # 转发数
+        'comments_num': int,     # 评论数
+        'ctime': int,            # 创建时间
+        'utime': int,            # 最后一次更新时间
     }
 }
 
+
 class InteractDB(Base):
     """
-    attachment database obejct
+    attach_data data object
     """
 
-    def insert(self, obj = {}):
+    def insert(self, createtime, obj = {}):
         raise NotImplementedError
 
-    def update(self, id, obj = {}):
+    def update(self, createtime, id, obj = {}):
         raise NotImplementedError
 
-    def update_many(self, id, obj = {}):
+    def get_detail(self, createtime, id):
         raise NotImplementedError
 
-    def delete(self, id, where):
+    def get_detail_by_acid(self, acid, createtime):
         raise NotImplementedError
 
-    def active(self, id, where):
+    def get_count(self, createtime, where = {}, select = None, **kwargs):
         raise NotImplementedError
 
-    def disable(self, id, where):
+    def get_list(self, createtime, where = {}, select = None, sort=[("pid", 1)], **kwargs):
         raise NotImplementedError
 
-    def get_detail(self, id):
-        raise NotImplementedError
-
-    def get_list(self, where = {}, select=None, **kwargs):
-        raise NotImplementedError
-
-    def get_list_by_domain(self, domain, where = {}, select=None, **kwargs):
-        raise NotImplementedError
-
-    def get_list_by_subdomain(self, subdomain, where = {}, select=None, **kwargs):
-        raise NotImplementedError

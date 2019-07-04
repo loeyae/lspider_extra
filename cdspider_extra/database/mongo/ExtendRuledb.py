@@ -30,6 +30,8 @@ class ExtendRuleDB(Mongo, BaseExtendRuleDB):
             collection.create_index('domain', name='domain')
         if 'subdomain' not  in indexes:
             collection.create_index('subdomain', name='subdomain')
+        if 'type' not  in indexes:
+            collection.create_index('type', name='type')
         if 'ctime' not  in indexes:
             collection.create_index('ctime', name='ctime')
 
@@ -85,17 +87,19 @@ class ExtendRuleDB(Mongo, BaseExtendRuleDB):
         kwargs.setdefault('sort', [('uuid', 1)])
         return self.find(where=where, select=select, **kwargs)
 
-    def get_list_by_domain(self, domain, where = {}, select=None, **kwargs):
+    def get_list_by_domain(self, domain, type_, where = {}, select=None, **kwargs):
         kwargs.setdefault('sort', [('uuid', 1)])
         if not where:
             where = {}
         where['domain'] = domain
+        where['type'] = type_
         where['subdomain'] = {"$in": ["", None]}
         return self.find(where=where, select=select, **kwargs)
 
-    def get_list_by_subdomain(self, subdomain, where = {}, select=None, **kwargs):
+    def get_list_by_subdomain(self, subdomain, type_, where = {}, select=None, **kwargs):
         kwargs.setdefault('sort', [('uuid', 1)])
         if not where:
             where = {}
         where['subdomain'] = subdomain
+        where['type'] = type_
         return self.find(where=where, select=select, **kwargs)

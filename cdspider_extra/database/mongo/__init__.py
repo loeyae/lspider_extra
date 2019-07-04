@@ -7,8 +7,6 @@
 :date:    2019/4/10 10:27
 """
 
-from .AttachDatadb import AttachDataDB
-from .CommentRuledb import CommentRuleDB
 from .Commentsdb import CommentsDB
 from .CommentsUniquedb import CommentsUniqueDB
 from .ExtendRuledb import ExtendRuleDB

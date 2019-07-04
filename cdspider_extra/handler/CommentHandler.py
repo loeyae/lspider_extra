@@ -37,7 +37,7 @@ class CommentHandler(GeneralHandler):
         获取匹配的规则
         """
         if "rule" in self.task and self.task['rule']:
-            parse_rule = self.db['CommentRuleDB'].get_detail(self.task['rule'])
+            parse_rule = self.db['ExtendRuleDB'].get_detail(self.task['rule'])
             if not parse_rule:
                 raise CDSpiderDBDataNotFound("rule: %s not exists" % self.task['rule'])
             self.task['parent_url'] = self.task['url']
@@ -70,10 +70,10 @@ class CommentHandler(GeneralHandler):
             self.task['parent_url'] = article['url']
             self.task['acid'] = article['acid']
             ruleId = self.task.get('rid', 0)
-            parse_rule = self.db['CommentRuleDB'].get_detail(ruleId)
+            parse_rule = self.db['ExtendRuleDB'].get_detail(ruleId)
             if not parse_rule:
                 raise CDSpiderDBDataNotFound("CommentRule: %s not exists" % ruleId)
-            if parse_rule['status'] != CommentRuleDB.STATUS_ACTIVE:
+            if parse_rule['status'] != ExtendRuleDB.STATUS_ACTIVE:
                 raise CDSpiderHandlerError("comment rule not active")
         return parse_rule
 
