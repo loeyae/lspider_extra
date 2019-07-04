@@ -68,7 +68,7 @@ def build_attach_url(data, rule, final_url):
     """
     if 'preparse' in rule and rule['preparse']:
         # 根据解析规则匹配解析内容
-        parse = rule['preparse'].get('parse', None)
+        parse = rule['preparse']
         params = {}
         hard_code = []
         if parse:
@@ -80,10 +80,12 @@ def build_attach_url(data, rule, final_url):
                     hard_code.append({"type": r['mode'], "name": k, "value": data[k]})
                 else:
                     params[k] = data[k]
-        urlrule = rule['preparse'].get('url', {})
-        if urlrule:
+        urlrule = {"mode": rule['mode']}
+        if rule['url']:
             # 格式化url设置，将parent_rul替换为详情页url
-            if urlrule['base'] == 'parent_url':
+            if rule['url'] == 'parent_url':
                 urlrule['base'] = final_url
+            else:
+                urlrule['base'] = rule['url']
         return build_url_by_rule(urlrule, params), hard_code
     return None, None

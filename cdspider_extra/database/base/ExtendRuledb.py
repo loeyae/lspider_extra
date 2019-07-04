@@ -12,20 +12,23 @@ from cdspider.database.base import Base
 
 {
     "extendRule": {
-        'uuid': int,           # 附加任务I
+        'uuid': int,          # 附加任务I
+        'name': str,          # 规则名称
+        'type': str,          # 规则联系
+        'url': str,           # 基础url
+        'mode': str,          # 参数匹配模式
         'domain': str,        # 一级域名
         'subdomain': str,     # 二级域名
+        'preparse': dict,     # 预解析规则
         'status': int,        # 状态
-        'frequency': int,          # 更新频率
+        'frequency': int,     # 更新频率
         'expire': int,        # 过期时间
-        'preparse': str,      # 预解析设置
-        'request': str,       # 解析设置
-        'parse': str,       # 解析设置
-        'unique': str,        # 唯一索引设置
+        'request': dict,      # 请求设置
+        'parse': dict,        # 解析设置
+        'unique': dict,       # 唯一索引设置
+        'validate': dict,     # 结果验证设置
         'ctime': int,         # 创建时间
         'utime': int,         # 最后一次更新时间
-        'creator': int,       # 创建人ID
-        'updator': int,       # 最后一次修改人ID
     }
 }
 
