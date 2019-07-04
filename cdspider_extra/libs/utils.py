@@ -76,8 +76,8 @@ def build_attach_url(data, rule, final_url):
             for k, r in _rule.items():
                 if k not in data:
                     return None, None
-                if 'mode' in r:
-                    hard_code.append({"type": r['mode'], "name": k, "value": data[k]})
+                if 'mode' in r and r['mode'] == "post":
+                    hard_code.append({"type": "data", "name": k, "value": data[k]})
                 else:
                     params[k] = data[k]
         urlrule = {"mode": rule['mode']}
