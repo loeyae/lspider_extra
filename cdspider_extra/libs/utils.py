@@ -43,7 +43,7 @@ def attach_preparse(parser_cls, source, final_url, rule, log_level):
     if parsed.keys() != rule.keys():
         '''
         数据未完全解析到，则任务匹配失败
-        '''
+        ''' 
         return False
     return parsed
 
