@@ -10,10 +10,11 @@ import copy
 import time
 from cdspider.handler import GeneralHandler
 from cdspider.libs.constants import *
-from cdspider.libs import utils
+from cdspider_extra.libs import utils
 from cdspider.parser import CustomParser
 from cdspider.parser.lib import TimeParser
 from cdspider_extra.database.base import *
+from cdspider.handler import HandlerUtils
 
 
 class CommentHandler(GeneralHandler):
@@ -29,7 +30,9 @@ class CommentHandler(GeneralHandler):
         :output self.process {"request": 请求设置, "parse": 解析规则, "paging": 分页规则, "unique": 唯一索引规则}
         """
         self.process = self.match_rule(save) or {"unique": {"data": None}, "parse": {"item":{"content":None}}}
-        if 'data' not  in self.process['unique'] or not self.process['unique']['data']:
+        if not self.process['unique'] or 'data' not in self.process['unique'] or not self.process[\
+                'unique']['data']:
+            self.process['unique'] = {}
             self.process['unique']['data'] = ','. join(self.process['parse']['item'].keys())
 
     def match_rule(self, save):
@@ -46,7 +49,7 @@ class CommentHandler(GeneralHandler):
             if typeinfo['domain'] != parse_rule['domain'] or \
                     (parse_rule['subdomain'] and typeinfo['subdomain'] != parse_rule['subdomain']):
                 raise CDSpiderNotUrlMatched()
-            crawler = self.get_crawler(parse_rule.get('request'))
+            crawler = HandlerUtils.get_crawler(parse_rule.get('request'), self.log_level)
             response = crawler.crawl(url=self.task['parent_url'])
             data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'],
                                          parse_rule, self.log_level)
@@ -75,16 +78,18 @@ class CommentHandler(GeneralHandler):
                 raise CDSpiderDBDataNotFound("CommentRule: %s not exists" % ruleId)
             if parse_rule['status'] != ExtendRuleDB.STATUS_ACTIVE:
                 raise CDSpiderHandlerError("comment rule not active")
+        parse_rule["parse"] = {"filter": "", "item": parse_rule["parse"]}
         return parse_rule
 
-    def run_parse(self, rule):
+    def run_parse(self, rule, save):
         """
         根据解析规则解析源码，获取相应数据
         :param rule 解析规则
         :input self.response 爬虫结果 {"last_source": 最后一次抓取到的源码, "final_url": 最后一次请求的url}
         :output self.response {"parsed": 解析结果}
         """
-        parser = CustomParser(source=self.response['content'], ruleset=copy.deepcopy(rule), log_level=self.log_level, url=self.response['final_url'])
+        parser = CustomParser(source=self.response['content'], ruleset=copy.deepcopy(rule),
+                   log_level=self.log_level, url=self.response['final_url'])
         self.response['parsed'] = parser.parse()
 
     def run_result(self, save):

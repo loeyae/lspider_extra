@@ -7,15 +7,15 @@
 :date:    2019-1-14 9:57:13
 """
 import copy
-import time
-from cdspider_extra.handler import CommentHandler
+from cdspider.handler import GeneralHandler
 from cdspider_extra.database.base import *
 from cdspider.libs.constants import *
-from cdspider.libs import utils
+from cdspider_extra.libs import utils
 from cdspider.parser import CustomParser
+from cdspider.handler import HandlerUtils
 
 
-class ExtendedHandler(CommentHandler):
+class ExtendedHandler(GeneralHandler):
     """
     extended handler
     :property task 爬虫任务信息 {"mode": "extend", "uuid": SpiderTask.extend uuid}
@@ -36,7 +36,7 @@ class ExtendedHandler(CommentHandler):
             if typeinfo['domain'] != parse_rule['domain'] \
                     or (parse_rule['subdomain'] and typeinfo['subdomain'] != parse_rule['subdomain']):
                 raise CDSpiderNotUrlMatched()
-            crawler = self.get_crawler(self.task.get('rule', {}).get('request'))
+            crawler = HandlerUtils.get_crawler(parse_rule.get('request'), self.log_level)
             response = crawler.crawl(url=self.task['parent_url'])
             data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'],
                                          parse_rule, self.log_level)
@@ -63,6 +63,16 @@ class ExtendedHandler(CommentHandler):
             if parse_rule['status'] != ExtendRuleDB.STATUS_ACTIVE:
                 raise CDSpiderHandlerError("comment rule not active")
         return parse_rule
+
+    def run_parse(self, rule, save):
+        """
+        根据解析规则解析源码，获取相应数据
+        :param rule 解析规则
+        :input self.response 爬虫结果 {"last_source": 最后一次抓取到的源码, "final_url": 最后一次请求的url}
+        :output self.response {"parsed": 解析结果}
+        """
+        parser = CustomParser(source=self.response['content'], ruleset=copy.deepcopy(rule), log_level=self.log_level, url=self.response['final_url'])
+        self.response['parsed'] = parser.parse()
 
     def run_result(self, save):
         """

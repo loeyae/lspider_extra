@@ -20,7 +20,7 @@ def array2rule(rule, final_url):
     for key, item in rule.items():
         ret = build_rule(item, final_url)
         if ret:
-            parse.update(ret)
+            parse.update({key: ret})
     return parse
 
 

@@ -11,8 +11,9 @@ import time
 from cdspider.handler import GeneralHandler
 from cdspider_extra.database.base import *
 from cdspider.libs.constants import *
-from cdspider.libs import utils
+from cdspider_extra.libs import utils
 from cdspider.parser import CustomParser
+from cdspider.handler import HandlerUtils
 
 
 class InteractHandler(GeneralHandler):
@@ -35,7 +36,7 @@ class InteractHandler(GeneralHandler):
             if typeinfo['domain'] != parse_rule['domain'] or \
                     (parse_rule['subdomain'] and typeinfo['subdomain'] != parse_rule['subdomain']):
                 raise CDSpiderNotUrlMatched()
-            crawler = self.get_crawler(parse_rule.get('request'))
+            crawler = HandlerUtils.get_crawler(parse_rule.get('request'), self.log_level)
             response = crawler.crawl(url=self.task['parent_url'])
             data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'],
                                          parse_rule, self.log_level)
@@ -62,7 +63,7 @@ class InteractHandler(GeneralHandler):
                 raise CDSpiderHandlerError("interaction num rule not active")
         return parse_rule
 
-    def run_parse(self, rule):
+    def run_parse(self, rule, save):
         """
         根据解析规则解析源码，获取相应数据
         :param rule 解析规则
