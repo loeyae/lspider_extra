@@ -36,13 +36,13 @@ class NewAttachmentTask(ExecutBase):
         crawlinfo = self.handler.task.get('crawlinfo')
         rid = self.handler.task.get('rid')
         self.handler.debug("%s new comment task starting" % self.__class__.__name__)
-        self.handler.result2comment(crawlinfo, save, rid, domain, subdomain, data, url)
+        self.result2comment(crawlinfo, save, rid, domain, subdomain, data, url)
         self.handler.debug("%s new comment task end" % self.__class__.__name__)
         self.handler.debug("%s new interact task starting" % self.__class__.__name__)
-        self.handler.result2interact(crawlinfo, save, rid, domain, subdomain, data, url)
+        self.result2interact(crawlinfo, save, rid, domain, subdomain, data, url)
         self.handler.debug("%s new interact task end" % self.__class__.__name__)
         self.handler.debug("%s new extend task starting" % self.__class__.__name__)
-        self.handler.result2extend(crawlinfo, save, rid, domain, subdomain, data, url)
+        self.result2extend(crawlinfo, save, rid, domain, subdomain, data, url)
         self.handler.debug("%s new extend task end" % self.__class__.__name__)
         self.handler.debug("%s new attach task end" % self.__class__.__name__)
 
@@ -159,7 +159,7 @@ class NewAttachmentTask(ExecutBase):
                     if cid:
                         crawlinfo['extendRule'] = rule['uuid']
                         crawlinfo['extendTaskId'] = cid
-                        if 'interactRuleList' in  crawlinfo:
+                        if 'extendRuleList' in crawlinfo:
                              crawlinfo['extendRuleList'][str(rule['uuid'])] = cid
                         else:
                             crawlinfo['extendRuleList'] = {str(rule['uuid']): cid}
@@ -259,7 +259,7 @@ class NewAttachmentTask(ExecutBase):
         :param url taks url
         :param rule 互动数任务规则
         """
-        if 'loop' not  in rule or not rule['loop']:
+        if 'loop' not in rule or not rule['loop']:
             task = {
                 'mediaType': self.handler.process.get('mediaType', self.handler.task.get('mediaType', MEDIA_TYPE_OTHER)),
                 'mode': HANDLER_MODE_EXTEND,                            # handler mode
@@ -268,7 +268,7 @@ class NewAttachmentTask(ExecutBase):
                 'parentid': rid,                                        # article id
                 'save': {"hard_code": data}
             }
-            self.handler.debug("%s build interact task: %s" % (self.__class__.__name__, str(task)))
+            self.handler.debug("%s build extend task: %s" % (self.__class__.__name__, str(task)))
             if not self.handler.testing_mode:
                 '''
                 testing_mode打开时，数据不入库
@@ -291,13 +291,15 @@ class NewAttachmentTask(ExecutBase):
             'expire': 0 if int(rule['expire']) == 0 else int(time.time()) + int(rule['expire']),
             'save': {"hard_code": data}
         }
-        self.handler.debug("%s build interact task: %s" % (self.handler.__class__.__name__, str(task)))
+        self.handler.debug("%s build extend task: %s" % (self.handler.__class__.__name__,
+                                                         str(task)))
         if not self.handler.testing_mode:
             '''
             testing_mode打开时，数据不入库
             '''
             try:
-                l = self.handler.db['SpiderTaskDB'].get_list(HANDLER_MODE_COMMENT, where={"uid": task['uid'], "rid": task['rid'], "parentid": task['parentid']})
+                l = self.handler.db['SpiderTaskDB'].get_list(HANDLER_MODE_EXTEND, where={"uid": task[
+                    'uid'], "rid": task['rid'], "parentid": task['parentid']})
                 if len(list(l)) == 0:
                     return self.handler.db['SpiderTaskDB'].insert(task)
                 return None
