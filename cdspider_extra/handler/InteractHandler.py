@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Licensed under the Apache License, Version 2.0 (the "License"),
 # see LICENSE for more details: http://www.apache.org/licenses/LICENSE-2.0.
 
@@ -8,12 +8,13 @@
 """
 import copy
 import time
+
 from cdspider.handler import GeneralHandler
-from cdspider_extra.database.base import *
-from cdspider.libs.constants import *
-from cdspider_extra.libs import utils
-from cdspider.parser import CustomParser
 from cdspider.handler import HandlerUtils
+from cdspider.libs.constants import *
+from cdspider.parser import CustomParser
+from cdspider_extra.database.base import *
+from cdspider_extra.libs import utils
 
 
 class InteractHandler(GeneralHandler):
@@ -22,6 +23,7 @@ class InteractHandler(GeneralHandler):
     :property task 爬虫任务信息 {"mode": "interact", "uuid": SpiderTask.interact uuid}
                    当测试该handler，数据应为 {"mode": "interact", "url": url, "interactionNumRule": 互动数规则，参考互动数规则}
     """
+
     def match_rule(self, save):
         """
         获取匹配的规则
@@ -70,7 +72,7 @@ class InteractHandler(GeneralHandler):
         :input self.response 爬虫结果 {"last_source": 最后一次抓取到的源码, "final_url": 最后一次请求的url}
         :output self.response {"parsed": 解析结果}
         """
-        parser = CustomParser(source=self.response['content'], ruleset=r, log_level=self.log_level,
+        parser = CustomParser(source=self.response['content'], ruleset=copy.deepcopy(rule), log_level=self.log_level,
                               url=self.response['final_url'])
         self.response['parsed'] = parser.parse()
 
@@ -87,19 +89,19 @@ class InteractHandler(GeneralHandler):
             result = copy.deepcopy(self.response['parsed'])
             attach_data = self.db['InteractDB'].get_detail(rid)
             if attach_data:
-                if "crawlinfo" not  in attach_data or not attach_data['crawlinfo']:
-                    #爬虫信息记录
+                if "crawlinfo" not in attach_data or not attach_data['crawlinfo']:
+                    # 爬虫信息记录
                     result['crawlinfo'] = {
-                        'pid': self.task['pid'],                        # project id
-                        'sid': self.task['sid'],                        # site id
-                        'tid': self.task['tid'],                        # task id
-                        'uid': self.task['uid'],                        # url id
-                        'kid': self.task['kid'],                        # keyword id
-                        'stid': self.task['uuid'],                      # spider task id
-                        'ruleId': self.task['rid'],                     # interactionNumRule id
-                        'final_url': self.response['final_url'],        # 请求url
+                        'pid': self.task['pid'],  # project id
+                        'sid': self.task['sid'],  # site id
+                        'tid': self.task['tid'],  # task id
+                        'uid': self.task['uid'],  # url id
+                        'kid': self.task['kid'],  # keyword id
+                        'stid': self.task['uuid'],  # spider task id
+                        'ruleId': self.task['rid'],  # interactionNumRule id
+                        'final_url': self.response['final_url'],  # 请求url
                     }
-                elif "ruleId" not  in attach_data['crawlinfo'] or not attach_data['crawlinfo']['ruleId']:
+                elif "ruleId" not in attach_data['crawlinfo'] or not attach_data['crawlinfo']['ruleId']:
                     crawlinfo = attach_data['crawlinfo']
                     crawlinfo['ruleId'] = self.task['rid']
                     result['crawlinfo'] = crawlinfo
@@ -114,15 +116,15 @@ class InteractHandler(GeneralHandler):
                     self.build_sync_task(rid)
                 self.crawl_info['crawl_count']['repeat_count'] += 1
             else:
-                #爬虫信息记录
+                # 爬虫信息记录
                 result['crawlinfo'] = {
-                    'pid': self.task['pid'],                        # project id
-                    'sid': self.task['sid'],                        # site id
-                    'tid': self.task['tid'],                        # task id
-                    'uid': self.task['uid'],                        # url id
-                    'kid': self.task['kid'],                        # keyword id
-                    'ruleId': self.task['rid'],                     # interactionNumRule id
-                    'list_url': self.response['final_url'],         # 列表url
+                    'pid': self.task['pid'],  # project id
+                    'sid': self.task['sid'],  # site id
+                    'tid': self.task['tid'],  # task id
+                    'uid': self.task['uid'],  # url id
+                    'kid': self.task['kid'],  # keyword id
+                    'ruleId': self.task['rid'],  # interactionNumRule id
+                    'list_url': self.response['final_url'],  # 列表url
                 }
                 result['ctime'] = self.crawl_id
                 result['acid'] = self.task['acid']
