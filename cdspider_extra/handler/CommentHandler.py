@@ -8,13 +8,14 @@
 """
 import copy
 import time
+
 from cdspider.handler import GeneralHandler
+from cdspider.handler import HandlerUtils
 from cdspider.libs.constants import *
-from cdspider_extra.libs import utils
 from cdspider.parser import CustomParser
 from cdspider.parser.lib import TimeParser
 from cdspider_extra.database.base import *
-from cdspider.handler import HandlerUtils
+from cdspider_extra.libs import utils
 
 
 class CommentHandler(GeneralHandler):
@@ -49,7 +50,9 @@ class CommentHandler(GeneralHandler):
             if typeinfo['domain'] != parse_rule['domain'] or \
                     (parse_rule['subdomain'] and typeinfo['subdomain'] != parse_rule['subdomain']):
                 raise CDSpiderNotUrlMatched()
-            crawler = HandlerUtils.get_crawler(parse_rule.get('request'), self.log_level)
+            request = parse_rule.get('request')
+            del request['proxy']
+            crawler = HandlerUtils.get_crawler(request, self.log_level)
             response = crawler.crawl(url=self.task['parent_url'])
             data = utils.get_attach_data(CustomParser, response['content'], self.task['parent_url'],
                                          parse_rule, self.log_level)
